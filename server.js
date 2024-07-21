@@ -12,7 +12,7 @@ const app = express();
 // Configure CORS
 app.use(
   cors({
-    origin: "http://localhost:8080",
+    origin: process.env.CLIENT_URL,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
