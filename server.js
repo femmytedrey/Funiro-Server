@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const userRoutes = require("./routes/users");
+const productRoutes = require("./routes/products");
 const admin = require("./firebaseSetup");
 
 dotenv.config();
@@ -13,7 +14,7 @@ const app = express();
 app.use(
   cors({
     origin: process.env.CLIENT_URL,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
@@ -44,6 +45,9 @@ const verifyFirebaseToken = async (req, res, next) => {
 };
 
 app.use("/api/users", verifyFirebaseToken, userRoutes);
+
+// ecommerce product data route
+app.use("/api/products", productRoutes);
 
 // Connect to the database and start the server
 mongoose
