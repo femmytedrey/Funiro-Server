@@ -19,6 +19,18 @@ const userSchema = new Schema(
       required: true,
       unique: true,
     },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    isAdmin: {
+      type: Boolean,
+      default: false,
+    },
+    // forgotPasswordToken: String,
+    // forgotPasswordTokenExpiry: Date,
+    verifyToken: String,
+    verifyTokenExpiry: Date,
   },
   { timestamps: true }
 );

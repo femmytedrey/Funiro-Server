@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const userRoutes = require("./routes/users");
 const productRoutes = require("./routes/products");
+const cartRoutes = require("./routes/carts");
 const admin = require("./firebaseSetup");
 
 dotenv.config();
@@ -48,6 +49,9 @@ app.use("/api/users", verifyFirebaseToken, userRoutes);
 
 // ecommerce product data route
 app.use("/api/products", productRoutes);
+
+//cart endpoints
+app.use("/api/cart", verifyFirebaseToken, cartRoutes);
 
 // Connect to the database and start the server
 mongoose
