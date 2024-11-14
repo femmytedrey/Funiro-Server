@@ -7,6 +7,8 @@ ServiceKey.json
 # Environment variables file
 .env
 
+stripeTest.txt
+
 # Optional: Logs
 logs/
 *.log

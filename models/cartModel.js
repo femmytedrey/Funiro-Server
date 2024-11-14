@@ -1,39 +1,45 @@
 const mongoose = require("mongoose");
-const Schema = mongoose.Schema
+const Schema = mongoose.Schema;
 
-const cartItemSchema = new Schema({
-  product: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Product",
-    required: true,
+const cartItemSchema = new Schema(
+  {
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    price: {
+      type: Number,
+      required: true,
+    },
   },
-  quantity: {
-    type: Number,
-    required: true,
-    min: 1,
-  },
-  price: {
-    type: Number,
-    required: true,
-  },
-},
-{_id: false}
+  { _id: false }
 );
 
-const cartSchema = new Schema({
-  user: {
-    type: String,
-    ref: "User",
-    required: true,
-    unique: true,
+const cartSchema = new Schema(
+  {
+    user: {
+      type: String,
+      ref: "User",
+      required: true,
+    },
+    items: [cartItemSchema],
+    total: {
+      type: Number,
+      default: 0,
+    },
+    status: {
+      type: String,
+      enum: ["active", "completed", "archived"],
+      default: "active",
+    },
   },
-  items: [cartItemSchema],
-  total: {
-    type: Number,
-    default: 0,
-  },
-},
-{timestamps: true}
+  { timestamps: true }
 );
 
 cartSchema.pre("save", function (next) {

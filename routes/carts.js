@@ -9,10 +9,10 @@ router.get("/", async (req, res) => {
     const userId = req.user.uid;
 
     //find the user's cart
-    const cart = await Cart.findOne({ user: userId }).populate(
-      "items.product",
-      "name price images"
-    );
+    const cart = await Cart.findOne({
+      user: userId,
+      status: { $in: ["active", "completed"] },
+    }).populate("items.product", "name price images");
 
     //check if cart exist
     if (!cart) {
@@ -43,9 +43,14 @@ router.post("/", async (req, res) => {
     }
 
     // Find the user's cart or create a new one if it doesn't exist
-    let cart = await Cart.findOne({ user: userId });
+    let cart = await Cart.findOne({
+      user: userId,
+      status: { $in: ["active", "completed"] },
+    });
     if (!cart) {
-      cart = new Cart({ user: userId, items: [] });
+      const newCart = new Cart({ user: userId, items: [], status: "active" });
+      cart = await newCart.save();
+      console.log("New cart created:", cart);
     }
 
     // Check if the product is already in the cart
@@ -95,7 +100,10 @@ router.patch("/:productId", async (req, res) => {
     }
 
     //find cart
-    const cart = await Cart.findOne({ user: userId });
+    const cart = await Cart.findOne({
+      user: userId,
+      status: { $in: ["active", "completed"] },
+    });
 
     if (!cart) {
       return res.status(404).json({ error: "Cart not found" });
@@ -132,7 +140,10 @@ router.delete("/:productId", async (req, res) => {
     const userId = req.user.uid;
 
     //find cart
-    const cart = await Cart.findOne({ user: userId });
+    const cart = await Cart.findOne({
+      user: userId,
+      status: { $in: ["active", "completed"] },
+    });
 
     if (!cart) {
       return res.status(404).json({ error: "Cart not found" });
