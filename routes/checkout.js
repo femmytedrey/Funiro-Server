@@ -39,6 +39,42 @@ router.post("/", async (req, res) => {
     const { deliveryDetails, paymentMethod } = req.body;
     const userId = req.user.uid;
 
+    // Input validation
+    const requiredFields = [
+      'firstName', 'lastName', 'email', 'shippingAddress', 
+      'phone', 'country', 'state', 'city', 'zipCode'
+    ];
+
+    const validationErrors = {}
+
+    requiredFields.forEach(field => {
+      if (!deliveryDetails[field]) {
+        validationErrors[field] = `${field} is required`;
+      }
+    });
+    //email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (deliveryDetails.email && !emailRegex.test(deliveryDetails.email)) {
+      validationErrors.email = 'Invalid email format';
+    }
+    // Validate phone format (customize regex as needed)
+    const phoneRegex = /^\+?[\d\s-]{8,}$/;
+    if (deliveryDetails.phone && !phoneRegex.test(deliveryDetails.phone)) {
+      validationErrors.phone = 'Invalid phone number format';
+    }
+
+    // Validate payment method
+    if (!['cashOnDelivery', 'card'].includes(paymentMethod)) {
+      validationErrors.paymentMethod = 'Invalid payment method';
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      return res.status(422).json({
+        error: 'Validation failed',
+        errors: validationErrors
+      });
+    }
+
     const currentCart = await Cart.findOne({
       user: userId,
       status: { $in: ["active", "completed"] },
@@ -175,7 +211,18 @@ router.post("/create-checkout-session", async (req, res) => {
   }
 });
 
-//webhook function
+//get session
+router.get("/session/:sessionId", async (req, res) => {
+  try {
+    const session = await stripe.checkout.sessions.retrieve(req.params.sessionId);
+    if (!session) {
+      return res.status(404).json({ error: "Session not found" });
+    }
+    res.json({ checkoutId: session.metadata.checkoutId });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 
 
 router.get("/:checkoutId", async (req, res) => {
