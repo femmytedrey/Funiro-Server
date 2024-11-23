@@ -41,13 +41,20 @@ router.post("/", async (req, res) => {
 
     // Input validation
     const requiredFields = [
-      'firstName', 'lastName', 'email', 'shippingAddress', 
-      'phone', 'country', 'state', 'city', 'zipCode'
+      "firstName",
+      "lastName",
+      "email",
+      "shippingAddress",
+      "phone",
+      "country",
+      "state",
+      "city",
+      "zipCode",
     ];
 
-    const validationErrors = {}
+    const validationErrors = {};
 
-    requiredFields.forEach(field => {
+    requiredFields.forEach((field) => {
       if (!deliveryDetails[field]) {
         validationErrors[field] = `${field} is required`;
       }
@@ -55,23 +62,23 @@ router.post("/", async (req, res) => {
     //email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (deliveryDetails.email && !emailRegex.test(deliveryDetails.email)) {
-      validationErrors.email = 'Invalid email format';
+      validationErrors.email = "Invalid email format";
     }
     // Validate phone format (customize regex as needed)
     const phoneRegex = /^\+?[\d\s-]{8,}$/;
     if (deliveryDetails.phone && !phoneRegex.test(deliveryDetails.phone)) {
-      validationErrors.phone = 'Invalid phone number format';
+      validationErrors.phone = "Invalid phone number format";
     }
 
     // Validate payment method
-    if (!['cashOnDelivery', 'card'].includes(paymentMethod)) {
-      validationErrors.paymentMethod = 'Invalid payment method';
+    if (!["cashOnDelivery", "card"].includes(paymentMethod)) {
+      validationErrors.paymentMethod = "Invalid payment method";
     }
 
     if (Object.keys(validationErrors).length > 0) {
       return res.status(422).json({
-        error: 'Validation failed',
-        errors: validationErrors
+        error: "Validation failed",
+        errors: validationErrors,
       });
     }
 
@@ -89,7 +96,6 @@ router.post("/", async (req, res) => {
     // Check for existing checkout
     let checkout = await Checkout.findOne({ cart: currentCart._id });
     let saveOperations = [];
-
 
     if (currentCart.status === "archived") {
       // Create new checkout for archived cart
@@ -125,6 +131,19 @@ router.post("/", async (req, res) => {
       if (currentCart.status === "active") {
         currentCart.status = "completed";
       }
+    }
+
+    if (paymentMethod === "cashOnDelivery") {
+      checkout.paymentStatus = "completed";
+      currentCart.status = "archived";
+
+      // Create new active cart
+      const newCart = new Cart({
+        user: userId,
+        items: [],
+        status: "active",
+      });
+      saveOperations.push(newCart.save());
     }
 
     saveOperations.push(checkout.save(), currentCart.save());
@@ -214,7 +233,9 @@ router.post("/create-checkout-session", async (req, res) => {
 //get session
 router.get("/session/:sessionId", async (req, res) => {
   try {
-    const session = await stripe.checkout.sessions.retrieve(req.params.sessionId);
+    const session = await stripe.checkout.sessions.retrieve(
+      req.params.sessionId
+    );
     if (!session) {
       return res.status(404).json({ error: "Session not found" });
     }
@@ -223,7 +244,6 @@ router.get("/session/:sessionId", async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
-
 
 router.get("/:checkoutId", async (req, res) => {
   const { checkoutId } = req.params;
