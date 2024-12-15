@@ -2,10 +2,44 @@ const Checkout = require("../models/CheckoutModel");
 const dotenv = require("dotenv");
 const Cart = require("../models/cartModel");
 const mongoose = require("mongoose");
+const User = require("../models/usersModel");
 
 dotenv.config();
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
+const getAdminCheckouts = async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    // First, fetch the user from MongoDB using the Firebase UID
+    const user = await User.findOne({ uid: userId });
+
+    if (!user?.isAdmin) {
+      return res
+        .status(403)
+        .json({ error: "Unauthorized: Admin access required" });
+    }
+
+    const checkouts = await Checkout.find()
+      .populate({
+        path: "cart",
+        populate: {
+          path: "items.product",
+          select: "name price images",
+        },
+      })
+      .sort({ createdAt: -1 });
+
+    if (!checkouts.length) {
+      return res.status(200).json({ checkouts: [] });
+    }
+
+    res.status(200).json({ checkouts });
+  } catch (error) {
+    console.error("Error fetching checkouts:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 const getCheckouts = async (req, res) => {
   try {
@@ -21,8 +55,8 @@ const getCheckouts = async (req, res) => {
       })
       .sort({ createdAt: -1 });
 
-    if (!checkouts) {
-      return res.status(404).json({ error: "Checkout not found" });
+    if (!checkouts.length) {
+      return res.status(200).json({ checkouts: [] });
     }
 
     res.status(200).json({ checkouts });
@@ -243,17 +277,19 @@ const getSession = async (req, res) => {
 
 const getCheckout = async (req, res) => {
   const { checkoutId } = req.params;
-  const user = req.user.uid;
+  const userId = req.user.uid;
 
   if (!mongoose.Types.ObjectId.isValid(checkoutId)) {
     return res.status(400).json({ error: "Invalid checkoutId" });
   }
 
   try {
-    const checkout = await Checkout.findOne({
-      _id: checkoutId,
-      user: user,
-    }).populate({
+    const user = await User.findOne({ uid: userId });
+    const query = user?.isAdmin
+      ? { _id: checkoutId }
+      : { _id: checkoutId, user: userId };
+
+    const checkout = await Checkout.findOne(query).populate({
       path: "cart",
       populate: {
         path: "items.product",
@@ -370,6 +406,7 @@ const updateCheckout = async (req, res) => {
 
 module.exports = {
   getCheckouts,
+  getAdminCheckouts,
   createCheckout,
   createSession,
   getSession,

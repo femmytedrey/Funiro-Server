@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const {
+  getAdminCheckouts,
   getCheckouts,
   createCheckout,
   createSession,
@@ -9,6 +10,8 @@ const {
   deleteCheckout,
   updateCheckout,
 } = require("../controllers/checkoutController");
+
+router.get("/admin", getAdminCheckouts);
 
 router.get("/", getCheckouts);
 

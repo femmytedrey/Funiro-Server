@@ -11,6 +11,7 @@ const admin = require("./firebaseSetup");
 //used in the webhook
 const Checkout = require("./models/CheckoutModel");
 const Cart = require("./models/cartModel");
+const { getAdminCheckouts } = require("./controllers/checkoutController");
 
 dotenv.config();
 
@@ -113,10 +114,11 @@ app.use("/api/users", verifyFirebaseToken, userRoutes);
 app.use("/api/products", productRoutes);
 
 //cart endpoints
-app.use("/api/cart", verifyFirebaseToken, cartRoutes);
+app.use("/api/carts", verifyFirebaseToken, cartRoutes);
 
-//cart endpoints
-app.use("/api/checkout", verifyFirebaseToken, checkoutRoutes);
+//checkout endpoints
+app.get("/api/admin/checkouts", verifyFirebaseToken, getAdminCheckouts);
+app.use("/api/checkouts", verifyFirebaseToken, checkoutRoutes);
 
 // Connect to the database and start the server
 mongoose
