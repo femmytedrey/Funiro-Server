@@ -7,6 +7,7 @@ const productRoutes = require("./routes/products");
 const checkoutRoutes = require("./routes/checkout");
 const cartRoutes = require("./routes/carts");
 const admin = require("./firebaseSetup");
+const path = require("path");
 
 //used in the webhook
 const Checkout = require("./models/CheckoutModel");
@@ -107,6 +108,12 @@ const verifyFirebaseToken = async (req, res, next) => {
     res.status(401).json({ error: "Authorization failed" });
   }
 };
+
+app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 app.use("/api/users", verifyFirebaseToken, userRoutes);
 
