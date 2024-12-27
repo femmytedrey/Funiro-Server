@@ -6,6 +6,7 @@ const {
   createProduct,
   updateProduct,
   searchProduct,
+  deleteProduct,
 } = require("../controllers/productController");
 
 //fetch all products
@@ -22,5 +23,8 @@ router.post("/", createProduct);
 
 //put request
 router.put("/:id", updateProduct);
+
+//delete request
+router.delete("/:id", deleteProduct);
 
 module.exports = router;

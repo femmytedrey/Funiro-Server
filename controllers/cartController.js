@@ -12,7 +12,7 @@ const getCart = async (req, res) => {
 
     //check if cart exist
     if (!cart) {
-      return res.status(404).json({ error: "Cart not found" });
+      return res.status(200).json({ cart: {} });
     }
 
     res.status(200).json({ cart });

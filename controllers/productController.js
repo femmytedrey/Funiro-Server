@@ -4,6 +4,9 @@ const Product = require("../models/productsModel");
 const allProducts = async (req, res) => {
   try {
     const products = await Product.find();
+    if(!products) {
+      return res.status(200).json([]);
+    }
     res.status(200).json(products);
   } catch (error) {
     return res.status(500).json({ error: "Unable to fetch product" });
@@ -197,10 +200,28 @@ const searchProduct = async (req, res) => {
   }
 };
 
+const deleteProduct = async (req,res) => {
+  try {
+    const {id} = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid id" });
+    }
+    const product = await Product.findByIdAndDelete(id);
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
+      }
+      res.status(200).json({ message: "Product deleted successfully" });
+
+  } catch (error) {
+    return res.status(500).json({ error: "Unable to delete product" });
+  }
+}
+
 module.exports = {
   allProducts,
   singleProduct,
   createProduct,
   updateProduct,
   searchProduct,
+  deleteProduct,
 };
