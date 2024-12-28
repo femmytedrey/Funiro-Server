@@ -1,4 +1,34 @@
 const User = require("../models/usersModel");
+const admin = require('firebase-admin');
+
+const getUsers = async (req, res) => {
+  try {
+    const { authorization } = req.headers;
+    if (!authorization || !authorization.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Authorization token is required" });
+    }
+
+    const idToken = authorization.split(" ")[1];
+
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const userId = decodedToken.uid;
+
+    const user = await User.findOne({ uid: userId });
+    if (!user) {
+      return res.status(404).json({ error: "User not found in database" });
+    }
+
+    if (!user.isAdmin) {
+      return res.status(403).json({ message: "Access denied. Admins only." });
+    }
+
+    const users = await User.find();
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Error in getUsers:", error.message);
+    res.status(500).json({ error: "Unable to fetch users" });
+  }
+};
 
 const storeUser = async (req, res) => {
   const { uid, email } = req.user;
@@ -73,5 +103,6 @@ const getUser = async (req, res) => {
 module.exports = {
   storeUser,
   updateUser,
+  getUsers,
   getUser,
 };

@@ -2,9 +2,12 @@ const express = require("express");
 const {
   storeUser,
   updateUser,
+  getUsers,
   getUser,
 } = require("../controllers/userController");
 const router = express.Router();
+
+router.get("/", getUsers);
 
 router.post("/store-user", storeUser);
 
