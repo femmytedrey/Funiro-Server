@@ -100,9 +100,66 @@ const getUser = async (req, res) => {
   }
 };
 
+const deleteUser = async (req, res) => {
+  const {uid} = req.params;
+  try {
+    await admin.auth().deleteUser(uid);
+    const deletedUser = await User.findOneAndDelete({ uid });
+    if (!deletedUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.status(200).json({ message: "User deleted successfully" });
+  }catch (error) {
+    res.status(500).json({ error: "Error deleting user" });
+  }
+}  
+
+const toggleAdminRole = async (req, res) => {
+  const { uid } = req.body; // UID of the user whose role is being toggled
+  const { authorization } = req.headers;
+
+  try {
+    if (!authorization || !authorization.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Authorization token is required" });
+    }
+
+    const idToken = authorization.split(" ")[1];
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const requesterId = decodedToken.uid;
+
+    // Ensure requester is an admin
+    const requester = await User.findOne({ uid: requesterId });
+    if (!requester || !requester.isAdmin) {
+      return res.status(403).json({ error: "Access denied. Admins only." });
+    }
+
+    // Find the target user
+    const user = await User.findOne({ uid });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Toggle admin status
+    user.isAdmin = !user.isAdmin;
+    await user.save();
+
+    // Optionally update Firebase custom claims
+    await admin.auth().setCustomUserClaims(uid, { isAdmin: user.isAdmin });
+
+    res.status(200).json({ message: "Admin role toggled successfully", user });
+  } catch (error) {
+    console.error("Error in toggleAdminRole:", error.message);
+    res.status(500).json({ error: "Unable to toggle admin role" });
+  }
+};
+
+
+
 module.exports = {
   storeUser,
   updateUser,
   getUsers,
   getUser,
+  deleteUser,
+  toggleAdminRole,
 };

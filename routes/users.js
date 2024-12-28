@@ -4,6 +4,8 @@ const {
   updateUser,
   getUsers,
   getUser,
+  deleteUser,
+  toggleAdminRole,
 } = require("../controllers/userController");
 const router = express.Router();
 
@@ -16,5 +18,11 @@ router.post("/update-user", updateUser);
 
 //get a user
 router.get("/get-user/:id", getUser);
+
+//delete a user
+router.delete("/delete-user/:uid", deleteUser);
+
+//toggle admin role
+router.patch("/toggle-admin", toggleAdminRole);
 
 module.exports = router;
